@@ -66,15 +66,6 @@ TASK1/
 ├── trainer/                           # nnUNet trainer implementations
 │   └── nnUNetTrainerBLUNet.py        # Custom BLUNet trainer
 │
-├── nnUNet/                            # nnUNet framework
-│   └── nnunetv2/
-│       ├── nets/
-│       │   └── BLUNet.py             # BLUNet integration
-│       └── training/
-│           └── nnUNetTrainer/
-│               ├── 01-filter.py       # Weight filtering script
-│               ├── 02-predict.py      # Batch prediction script
-│               └── 03-evaluate.py     # Evaluation script
 │
 ├── MRSegmentator/                     # MRI preprocessing tools
 ├── nnUNet_results/                    # Trained model checkpoints
