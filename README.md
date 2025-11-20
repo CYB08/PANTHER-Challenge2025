@@ -65,20 +65,12 @@ TASK1/
 ├── trainer/                           # nnUNet trainer implementations
 │   └── nnUNetTrainerBLUNet.py        # Custom BLUNet trainer
 │
-│
-├── MRSegmentator/                     # MRI preprocessing tools
+├── MRSegmentator/                     # MRI preprocessing tools https://github.com/hhaentze/MRSegmentator.git
 ├── nnUNet_results/                    # Trained model checkpoints
 └── Dockerfile                         # Docker container configuration
 ```
 
-## 🚀 Installation
-
-### Prerequisites
-
-- Python 3.9+
-- CUDA 11.0+ (for GPU support)
-- 16GB+ RAM
-- 50GB+ disk space
+## Installation
 
 ### Setup
 
@@ -105,7 +97,7 @@ export nnUNet_preprocessed="/path/to/nnUNet_preprocessed"
 export nnUNet_results="/path/to/nnUNet_results"
 ```
 
-## 📊 Dataset Preparation
+## Dataset Preparation
 
 ### Expected Data Structure
 
@@ -152,38 +144,14 @@ sitk.WriteImage(cropped, "case001_preprocessed.nii.gz")
 ```bash
 # Filter domain adaptation weights from trained model
 python training/filter.py
-
-# Generate pseudo-labels on unlabeled data
-# Configuration in filter.py:
-# - MODEL_FOLDER: Path to trained model
-# - INPUT_FOLDER: Unlabeled MRI scans
-# - OUTPUT_FOLDER: Output pseudo-labels
 ```
-
-**What it does**:
-1. Removes domain adaptation layers from model checkpoints
-2. Initializes nnUNet predictor with cleaned weights
-3. Generates predictions on unlabeled MRI scans
-4. Saves pseudo-labels for evaluation
 
 ### Stage 2: Quality Evaluation & Selection
 
 ```bash
 # Evaluate pseudo-label quality
 python training/evaluate.py
-
-# Configuration in evaluate.py:
-# - PSEUDO_LABELS: Generated pseudo-labels
-# - VALIDATION_GT: Validation ground truth
-# - DICE_THRESHOLD: Quality threshold (e.g., 0.7)
-# - SELECTED_OUTPUT: High-quality pseudo-labels
 ```
-
-**What it does**:
-1. Computes Dice scores for pseudo-labels vs validation set
-2. Filters cases with Dice ≥ threshold
-3. Copies selected pseudo-labels to output folder
-4. Saves selection list for tracking
 
 ### Stage 3: Model Retraining
 
@@ -194,21 +162,9 @@ nnUNetv2_train DATASET_ID 3d_fullres 0 \
     --npz  # Use with additional pseudo-labeled data
 ```
 
-### Iterative Refinement
-
-```bash
-# Repeat the cycle for continuous improvement
-for iteration in {1..5}; do
-    echo "=== Iteration $iteration ==="
-    python training/filter.py
-    python training/evaluate.py
-    nnUNetv2_train DATASET_ID 3d_fullres 0 -tr nnUNetTrainerBLUNet
-done
-```
-
 ## 🎯 Model Training
 
-### Standard Training (Supervised Only)
+### Training
 
 ```bash
 # Plan and preprocess
@@ -216,30 +172,9 @@ nnUNetv2_plan_and_preprocess -d DATASET_ID --verify_dataset_integrity
 
 # Train BLUNet
 nnUNetv2_train DATASET_ID 3d_fullres 0 -tr nnUNetTrainerBLUNet
-
-# Options:
-# --c: Use specific configuration
-# -p: Use specific plans file
-# --npz: Enable deep supervision
 ```
 
-### Semi-Supervised Training
-
-```bash
-# 1. Initial training on labeled data
-nnUNetv2_train DATASET_ID 3d_fullres 0 -tr nnUNetTrainerBLUNet
-
-# 2. Generate pseudo-labels
-python training/filter.py
-
-# 3. Select high-quality cases
-python training/evaluate.py
-
-# 4. Retrain with augmented dataset
-nnUNetv2_train DATASET_ID 3d_fullres 0 -tr nnUNetTrainerBLUNet --continue_training
-```
-
-## 🔮 Inference
+## Inference
 
 ### Single Case Prediction
 
@@ -286,59 +221,6 @@ nnUNetv2_predict \
     --disable_tta  # Disable test-time augmentation for speed
 ```
 
-## 📈 Evaluation
-
-### Compute Metrics
-
-```python
-from training.evaluate import PseudoLabelSelector
-
-selector = PseudoLabelSelector(dice_threshold=0.7, labels=[1, 2])
-
-# Evaluate predictions
-metrics = selector.evaluate_predictions(
-    pred_folder="predictions/",
-    gt_folder="ground_truth/",
-    output_json="results.json"
-)
-
-# Select high-quality cases
-selected = selector.select_high_quality_cases(
-    metrics_json="results.json",
-    pred_folder="predictions/",
-    output_folder="selected/"
-)
-```
-
-### Expected Metrics
-
-| Label | Class | Target Dice |
-|-------|-------|-------------|
-| 1     | Tumor | ≥ 0.70      |
-| 2     | Cyst  | ≥ 0.70      |
-
-## 🛠️ Data Utilities
-
-### Resampling
-
-```python
-from data_utils import resample_img
-
-# Resample MRI to uniform spacing
-resampled_image = resample_img(
-    image, 
-    out_spacing=[3.0, 3.0, 6.0],  # Target spacing in mm
-    is_label=False  # Use B-spline interpolation
-)
-
-# Resample segmentation mask
-resampled_mask = resample_img(
-    mask,
-    out_spacing=[3.0, 3.0, 6.0],
-    is_label=True  # Use nearest-neighbor interpolation
-)
-```
-
 ### Pancreas ROI Cropping
 
 ```python
@@ -358,121 +240,3 @@ full_size_prediction = restore_to_full_size(
     crop_coordinates=crop_coords
 )
 ```
-
-## 🐳 Docker Support
-
-```bash
-# Build Docker image
-docker build -t pancreas-segmentation .
-
-# Run container
-docker run --gpus all \
-    -v /path/to/data:/data \
-    -v /path/to/results:/results \
-    pancreas-segmentation \
-    nnUNetv2_train DATASET_ID 3d_fullres 0 -tr nnUNetTrainerBLUNet
-```
-
-## 📝 Configuration
-
-### Model Hyperparameters
-
-Located in `training/network.py`:
-
-```python
-# BLUNet architecture parameters
-n_stages = 6                           # Number of encoder/decoder stages
-features_per_stage = [32, 64, 128, 256, 320, 320]  # Channels per stage
-order_range = [1, 2, 3, 4, 5, 5]      # hgConv orders
-drop_path_rate = 0.5                   # Stochastic depth rate
-```
-
-### Training Parameters
-
-Located in `trainer/nnUNetTrainerBLUNet.py`:
-
-```python
-initial_lr = 1e-2                      # Initial learning rate
-num_epochs = 1000                      # Training epochs
-batch_size = 2                         # Batch size
-deep_supervision = True                # Enable deep supervision
-```
-
-## 🔬 Technical Details
-
-### BLUNet Components
-
-1. **High-order Gated Convolution (hgConv)**
-   - Multi-scale feature extraction
-   - Hierarchical channel splitting
-   - Learnable gating mechanism
-
-2. **Hierarchical Gated Convolutional Block (hgcnblock)**
-   - Channel transformation
-   - LayerNorm + hgConv with residual
-   - Standard convolutions
-   - Drop path regularization
-
-3. **Residual Encoder/Decoder**
-   - Stacked residual blocks
-   - Progressive resolution changes
-   - Skip connections
-   - Symmetric architecture
-
-### Label Definitions
-
-| Value | Structure | Description |
-|-------|-----------|-------------|
-| 0     | Background | Non-pancreatic tissue |
-| 1     | Tumor | Pancreatic ductal adenocarcinoma (PDAC) |
-| 2     | Cyst | Pancreatic cystic lesion |
-
-## 🎓 Citation
-
-If you use this code in your research, please cite:
-
-```bibtex
-@article{blunet_pancreas_2025,
-  title={Semi-Supervised Pancreatic Tumor Segmentation with BLUNet},
-  author={Your Name},
-  journal={Medical Image Analysis},
-  year={2025}
-}
-```
-
-## 📄 License
-
-This project incorporates components from:
-- **nnUNet**: Apache License 2.0
-- **MRSegmentator**: Apache License 2.0
-- **Data utilities**: Apache License 2.0 (Radboud UMC)
-
-See individual LICENSE files in subdirectories for details.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## 📧 Contact
-
-For questions or issues, please open an issue on GitHub or contact:
-- Email: your.email@example.com
-- GitHub: [@yourusername](https://github.com/yourusername)
-
-## 🙏 Acknowledgments
-
-- nnUNet framework by Fabian Isensee et al.
-- MRSegmentator by Radboud UMC
-- PANORAMA dataset contributors
-- Medical Image Analysis community
-
----
-
-**Last Updated**: November 2025  
-**Status**: Active Development  
-**Version**: 1.0.0
-
