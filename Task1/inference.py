@@ -145,9 +145,8 @@ class PancreaticTumorSegmentationContainer(SegmentationAlgorithm):
         #6. Resample the nnUNet output to original resolution and save as final prediction
         tumor_mask_cropped = sitk.ReadImage(self.nnunet_output_dir / mr_mask_name)
 
-        # 过滤标签，只保留标签1
         tumor_array = sitk.GetArrayFromImage(tumor_mask_cropped)
-        tumor_array[tumor_array != 1] = 0  # 将非1的标签都设为0
+        tumor_array[tumor_array != 1] = 0
         tumor_mask_cropped = sitk.GetImageFromArray(tumor_array)
         tumor_mask_cropped.CopyInformation(sitk.ReadImage(self.nnunet_output_dir / mr_mask_name))
 
@@ -158,7 +157,6 @@ class PancreaticTumorSegmentationContainer(SegmentationAlgorithm):
         end_time = time.perf_counter()
         print(f"Prediction time: {end_time - start_time:.3f} seconds")
 
-    # 第154行的predict函数，将trainer参数的默认值修改
     def predict(self, input_dir, output_dir, task="Dataset091_PantherTask1", trainer="nnUNetTrainerBLUnet_1000epochs",
                 configuration="3d_fullres", checkpoint="checkpoint_final.pth", folds="0,1"):
             """
