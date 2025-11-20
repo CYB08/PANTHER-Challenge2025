@@ -20,7 +20,7 @@ This project implements a semi-supervised learning pipeline for pancreatic tumor
 
 ## 🏗️ Architecture
 
-### BLUNet (Bi-Level U-Net)
+### BLUNet
 
 ```
 Input MRI Scan
