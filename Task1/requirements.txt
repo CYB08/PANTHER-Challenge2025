@@ -1,0 +1,3 @@
+SimpleITK
+numpy
+evalutils==0.4.2

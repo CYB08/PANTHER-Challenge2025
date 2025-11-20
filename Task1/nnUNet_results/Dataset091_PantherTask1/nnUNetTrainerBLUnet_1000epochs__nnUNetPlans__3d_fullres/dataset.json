@@ -1,0 +1,12 @@
+{
+    "channel_names": {
+        "0": "MRI"
+    },
+    "labels": {
+        "background": 0,
+        "tumor": 1,
+        "panther": 2
+    },
+    "numTraining": 92,
+    "file_ending": ".mha"
+}

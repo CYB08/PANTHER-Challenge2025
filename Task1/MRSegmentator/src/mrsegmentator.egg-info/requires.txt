@@ -1,0 +1,10 @@
+argparse==1.4.0
+numpy<2
+pydicom
+highdicom
+
+[dev]
+black
+flake8-nb
+isort
+mypy

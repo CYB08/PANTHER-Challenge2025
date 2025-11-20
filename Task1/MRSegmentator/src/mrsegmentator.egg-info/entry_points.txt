@@ -1,0 +1,3 @@
+[console_scripts]
+dcm_helper = dicom_helper.main:main
+mrsegmentator = mrsegmentator.main:main
