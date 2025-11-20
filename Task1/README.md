@@ -5,7 +5,7 @@ A deep learning framework for automatic pancreatic tumor segmentation from MRI s
 ## 📋 Overview
 
 This project implements a semi-supervised learning pipeline for pancreatic tumor segmentation that:
-- Uses **BLUNet** (Bi-Level U-Net with Hierarchical Gated Convolutions) as the backbone architecture
+- Uses **BLUNet** as the backbone architecture
 - Generates high-quality pseudo-labels from unlabeled MRI data
 - Iteratively improves model performance by selecting reliable predictions
 - Integrates seamlessly with the nnUNet framework
