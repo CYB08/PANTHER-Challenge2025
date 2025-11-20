@@ -1,11 +1,11 @@
-# Pancreatic Tumor Segmentation with Semi-Supervised Learning
+# Pancreatic Tumor Segmentation
 
 A deep learning framework for automatic pancreatic tumor segmentation from MRI scans using semi-supervised learning with the BLUNet architecture integrated into nnUNet.
 
 ## 📋 Overview
 
 This project implements a semi-supervised learning pipeline for pancreatic tumor segmentation that:
-- Uses **BLUNet** (Bi-Level U-Net with Hierarchical Gated Convolutions) as the backbone architecture
+- Uses **BLUNet** as the backbone architecture
 - Generates high-quality pseudo-labels from unlabeled MRI data
 - Iteratively improves model performance by selecting reliable predictions
 - Integrates seamlessly with the nnUNet framework
@@ -48,7 +48,6 @@ Tumor Segmentation Output
 - **hgConv**: High-order gated convolution for multi-scale feature extraction
 - **hgcnblock**: Hierarchical gated convolutional block with residual connections
 - **Layer Normalization**: Spatial normalization for stable training
-- **Stochastic Depth**: Drop path regularization for improved generalization
 
 ## 📁 Project Structure
 
@@ -66,15 +65,6 @@ TASK1/
 ├── trainer/                           # nnUNet trainer implementations
 │   └── nnUNetTrainerBLUNet.py        # Custom BLUNet trainer
 │
-├── nnUNet/                            # nnUNet framework
-│   └── nnunetv2/
-│       ├── nets/
-│       │   └── BLUNet.py             # BLUNet integration
-│       └── training/
-│           └── nnUNetTrainer/
-│               ├── 01-filter.py       # Weight filtering script
-│               ├── 02-predict.py      # Batch prediction script
-│               └── 03-evaluate.py     # Evaluation script
 │
 ├── MRSegmentator/                     # MRI preprocessing tools
 ├── nnUNet_results/                    # Trained model checkpoints
